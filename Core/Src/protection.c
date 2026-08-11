@@ -12,6 +12,7 @@
 #include "protection.h"
 #include "adc.h"
 #include "bldc.h"
+#include "SEGGER_RTT.h"
 
 static volatile FaultCode_t s_lastFault = FAULT_NONE;
 
@@ -39,22 +40,27 @@ void Protection_Check(void)
   if (vbus > VBUS_OVERVOLTAGE_V)
   {
     s_lastFault = FAULT_OVERVOLTAGE;
+    SEGGER_RTT_WriteString(0, "[FAULT] overvoltage\r\n");
   }
   else if ((BLDC_GetState() == BLDC_RUNNING) && (vbus < VBUS_UNDERVOLTAGE_V))
   {
     s_lastFault = FAULT_UNDERVOLTAGE;
+    SEGGER_RTT_WriteString(0, "[FAULT] undervoltage\r\n");
   }
   else if (AbsCurrentDelta(g_adcReadings.curr_u_raw) > (int32_t)CURRENT_ADC_TRIP_DELTA)
   {
     s_lastFault = FAULT_OVERCURRENT_U;
+    SEGGER_RTT_WriteString(0, "[FAULT] overcurrent U\r\n");
   }
   else if (AbsCurrentDelta(g_adcReadings.curr_v_raw) > (int32_t)CURRENT_ADC_TRIP_DELTA)
   {
     s_lastFault = FAULT_OVERCURRENT_V;
+    SEGGER_RTT_WriteString(0, "[FAULT] overcurrent V\r\n");
   }
   else if (AbsCurrentDelta(g_adcReadings.curr_w_raw) > (int32_t)CURRENT_ADC_TRIP_DELTA)
   {
     s_lastFault = FAULT_OVERCURRENT_W;
+    SEGGER_RTT_WriteString(0, "[FAULT] overcurrent W\r\n");
   }
 
   if (s_lastFault != FAULT_NONE)

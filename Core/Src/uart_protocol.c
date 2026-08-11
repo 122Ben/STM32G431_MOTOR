@@ -20,6 +20,7 @@
 #include "speed_pid.h"
 #include "protection.h"
 #include "adc.h"
+#include "SEGGER_RTT.h"
 
 static uint8_t  s_rxByte;
 static char     s_lineBuf[UART_RX_LINE_MAX];
@@ -182,6 +183,7 @@ static void SendTelemetryLine(void)
                             StateName(BLDC_GetState()), FaultName(Protection_GetLastFault()));
 
   HAL_UART_Transmit(&huart2, (uint8_t *)line, idx, 50);
+  SEGGER_RTT_Write(0, line, idx); /* mirror the same line to the RTT Terminal window */
 }
 
 void UART_Protocol_TelemetryTick(void)

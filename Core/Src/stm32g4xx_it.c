@@ -9,6 +9,7 @@
 #include "stm32g4xx_it.h"
 #include "bldc.h"
 #include "button.h"
+#include "SEGGER_RTT.h"
 
 extern UART_HandleTypeDef huart2;
 
@@ -23,26 +24,31 @@ void HardFault_Handler(void)
 {
   /* A hard fault while a motor could be spinning is not something to try to
    * recover from in software - the safest thing this handler can do is make
-   * sure the bridge is off, then stop. */
+   * sure the bridge is off, then stop. RTT write is a plain memory copy (no
+   * blocking I/O), safe to call from a fault handler. */
   TIM1->BDTR &= ~TIM_BDTR_MOE;
+  SEGGER_RTT_WriteString(0, "*** HardFault_Handler ***\r\n");
   while (1) { }
 }
 
 void MemManage_Handler(void)
 {
   TIM1->BDTR &= ~TIM_BDTR_MOE;
+  SEGGER_RTT_WriteString(0, "*** MemManage_Handler ***\r\n");
   while (1) { }
 }
 
 void BusFault_Handler(void)
 {
   TIM1->BDTR &= ~TIM_BDTR_MOE;
+  SEGGER_RTT_WriteString(0, "*** BusFault_Handler ***\r\n");
   while (1) { }
 }
 
 void UsageFault_Handler(void)
 {
   TIM1->BDTR &= ~TIM_BDTR_MOE;
+  SEGGER_RTT_WriteString(0, "*** UsageFault_Handler ***\r\n");
   while (1) { }
 }
 

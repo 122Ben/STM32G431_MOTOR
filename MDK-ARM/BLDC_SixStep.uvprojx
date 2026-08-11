@@ -346,7 +346,7 @@
               <MiscControls>-Wno-padded -Wno-cast-align -Wno-switch-enum</MiscControls>
               <Define>USE_HAL_DRIVER,STM32G431xx</Define>
               <Undefine></Undefine>
-              <IncludePath>..\Core\Inc;..\Drivers\STM32G4xx_HAL_Driver\Inc;..\Drivers\CMSIS\Device\ST\STM32G4xx\Include;..\Drivers\CMSIS\Include</IncludePath>
+              <IncludePath>..\Core\Inc;..\Drivers\STM32G4xx_HAL_Driver\Inc;..\Drivers\CMSIS\Device\ST\STM32G4xx\Include;..\Drivers\CMSIS\Include;..\Middlewares\SEGGER_RTT\SEGGER;..\Middlewares\SEGGER_RTT\Config</IncludePath>
             </VariousControls>
           </Cads>
 
@@ -568,6 +568,27 @@
               <FileName>stm32g4xx_hal_uart_ex.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Drivers\STM32G4xx_HAL_Driver\Src\stm32g4xx_hal_uart_ex.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+
+        <Group>
+          <GroupName>Middlewares/SEGGER_RTT</GroupName>
+          <Files>
+            <File>
+              <FileName>SEGGER_RTT.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Middlewares\SEGGER_RTT\SEGGER\SEGGER_RTT.c</FilePath>
+            </File>
+            <File>
+              <FileName>SEGGER_RTT_printf.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Middlewares\SEGGER_RTT\SEGGER\SEGGER_RTT_printf.c</FilePath>
+            </File>
+            <File>
+              <FileName>SEGGER_RTT_Syscalls_KEIL.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Middlewares\SEGGER_RTT\Syscalls\SEGGER_RTT_Syscalls_KEIL.c</FilePath>
             </File>
           </Files>
         </Group>

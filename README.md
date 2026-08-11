@@ -32,9 +32,10 @@ Core/Inc, Core/Src             应用代码 + CubeMX 风格外设初始化
 Core/Startup                   启动文件 (原厂 startup_stm32g431xx.s)
 Drivers/CMSIS                  原厂 CMSIS Core + STM32G4 Device 头文件/system 文件
 Drivers/STM32G4xx_HAL_Driver   原厂 HAL 库（仅保留本工程用到的模块）
+Middlewares/SEGGER_RTT          原厂 SEGGER RTT 源码（调试日志，见 3.6）
 ```
 
-`Drivers/` 和 `Core/Startup` 下的文件均为 ST 官方 `STM32CubeG4` / `stm32g4xx_hal_driver` / `cmsis_device_g4` 仓库的原始源码（未做任何修改），不是手写模拟版本。
+`Drivers/`、`Core/Startup`、`Middlewares/SEGGER_RTT` 下的文件均为原厂原始源码（未做任何修改，仅 `Middlewares/SEGGER_RTT/Config/SEGGER_RTT_Conf.h` 把几个仅在 Zephyr 构建下才有意义的 `CONFIG_*` 宏替换成了字面量默认值，其余逐行保留原文件内容），不是手写模拟版本。
 
 ## 3. 用 Keil5 打开与编译
 
@@ -58,6 +59,26 @@ Drivers/STM32G4xx_HAL_Driver   原厂 HAL 库（仅保留本工程用到的模�
 4. 切到 **Utilities** 页签，"Use Debug Driver" 前打勾（一般会跟 Debug 页联动自动选成 J-Link 的下载驱动），确认后 F8（Download）就是用 J-Link 烧录，Ctrl+F5 就是用 J-Link 进调试。
 
 工程本身（源码、编译配置）已经和调试器完全解耦，选哪个探头不影响编译产物。
+
+## 3.6 SEGGER RTT 调试日志
+
+工程已经集成 SEGGER RTT（源码来自 SEGGER 官方，通过 Zephyr 项目维护的镜像仓库 `zephyrproject-rtos/segger` 拉取，逐行保留原文件内容，未做修改），可以在**电机全速运行、不打断实时性**的前提下往调试器里打印日志，比 UART 更适合放在中断/故障路径里。
+
+**已经接好的地方：**
+- `main.c` 启动时调用 `SEGGER_RTT_Init()` 并打印一行启动 Banner。
+- `stm32g4xx_it.c` 里的 `HardFault_Handler`/`MemManage_Handler`/`BusFault_Handler`/`UsageFault_Handler` 在关断 PWM 之后，会各自打一行 `*** xxx_Handler ***`，方便不接 UART 也能看到具体是哪个 Fault。
+- `protection.c` 里过压/欠压/三相过流触发保护时，会打一行 `[FAULT] ...`。
+- `uart_protocol.c` 的遥测行会同时写一份到 RTT（和 UART 内容一样），不用切串口调试助手也能看转速/电流/状态。
+- 集成了 `SEGGER_RTT_Syscalls_KEIL.c`（SEGGER 官方针对 Keil/AC6 的 retarget 实现），意味着如果你在业务代码里直接用标准库 `printf(...)`，也会自动走 RTT 输出，不需要额外配置。
+
+**怎么看日志（任选一种，前提是已经按 3.5 把调试器切到 J-Link）：**
+1. **Keil 内置**：Debug 模式下（Ctrl+F5 进调试），`View` -> `Serial Windows` -> `Debug (printf) Viewer`，勾选 "Enable" 并把接口选成 RTT。
+2. **独立的 J-Link RTT Viewer**：J-Link 驱动装好后自带 `JLinkRTTViewer.exe`，可以在**不占用 Keil 调试会话**的情况下单独连上看日志（比如一边用 Keil 单步调试一边开着日志窗口不冲突的场景）。
+
+**几点说明：**
+- 默认用的是纯 C 版本的锁（`RTT_USE_ASM=0`），没有引入 `SEGGER_RTT_ASM_ARMv7M.S` 汇编文件，少一个文件、少一层风险，性能对这个工程的打印频率完全够用。
+- 上/下行缓冲区大小、通道数等参数在 `Middlewares/SEGGER_RTT/Config/SEGGER_RTT_Conf.h` 里，都是 SEGGER 官方默认值（上行 1KB/下行 16B/3上3下通道），有需要可以自己改大。
+- 同样出于"本沙箱没有 Keil 工具链"的原因，这部分也没法在这里实际跑一次编译验证，如果 Build 有报错（尤其是 `rt_sys.h`/`rt_misc.h` 相关，这两个头文件是 Keil ARM Compiler 自带的，不需要额外配置 Include Path），欢迎把报错发我。
 
 ## 4. 上电前必读 / 调试步骤
 

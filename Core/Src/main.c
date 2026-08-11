@@ -17,6 +17,7 @@
 #include "protection.h"
 #include "button.h"
 #include "uart_protocol.h"
+#include "SEGGER_RTT.h"
 
 static void MX_Peripherals_Init(void);
 static void HandleButtonEvent(ButtonEvent_t ev);
@@ -26,6 +27,9 @@ int main(void)
   HAL_Init();
   SystemClock_Config();
   MX_Peripherals_Init();
+
+  SEGGER_RTT_Init();
+  SEGGER_RTT_WriteString(0, "\r\n[BLDC_SixStep] RTT up, SYSCLK=170MHz\r\n");
 
   BLDC_Init();
   SpeedPID_Init();
