@@ -20,35 +20,57 @@ void NMI_Handler(void)
   while (1) { }
 }
 
-void HardFault_Handler(void)
+/**
+  * @brief  MemManage/BusFault/UsageFault are NOT individually enabled (SCB->SHCSR
+  *         MEMFAULTENA/BUSFAULTENA/USGFAULTENA are 0 at reset and this project never
+  *         sets them), so every fault currently escalates straight to HardFault -
+  *         CFSR still tells us which one it really was (MMFSR/BFSR/UFSR sub-fields).
+  *         Dumps PC/LR from the stacked exception frame plus the fault status/address
+  *         registers over RTT before killing PWM and hanging, so a real fault is
+  *         actually diagnosable instead of just a silent freeze.
+  */
+void HardFault_Handler_C(uint32_t *pStackFrame)
 {
-  /* A hard fault while a motor could be spinning is not something to try to
-   * recover from in software - the safest thing this handler can do is make
-   * sure the bridge is off, then stop. RTT write is a plain memory copy (no
-   * blocking I/O), safe to call from a fault handler. */
+  /* pStackFrame[0..7] = R0, R1, R2, R3, R12, LR, PC, xPSR (auto-stacked by the CPU) */
   TIM1->BDTR &= ~TIM_BDTR_MOE;
-  SEGGER_RTT_WriteString(0, "*** HardFault_Handler ***\r\n");
+  SEGGER_RTT_printf(0,
+                     "*** HardFault *** PC=0x%08x LR=0x%08x xPSR=0x%08x\r\n"
+                     "    CFSR=0x%08x HFSR=0x%08x MMFAR=0x%08x BFAR=0x%08x\r\n",
+                     pStackFrame[6], pStackFrame[5], pStackFrame[7],
+                     SCB->CFSR, SCB->HFSR, SCB->MMFAR, SCB->BFAR);
   while (1) { }
+}
+
+__attribute__((naked)) void HardFault_Handler(void)
+{
+  __asm volatile
+  (
+    "tst   lr, #4                \n"
+    "ite   eq                    \n"
+    "mrseq r0, msp                \n"
+    "mrsne r0, psp                \n"
+    "b     HardFault_Handler_C    \n"
+  );
 }
 
 void MemManage_Handler(void)
 {
   TIM1->BDTR &= ~TIM_BDTR_MOE;
-  SEGGER_RTT_WriteString(0, "*** MemManage_Handler ***\r\n");
+  SEGGER_RTT_printf(0, "*** MemManage_Handler *** CFSR=0x%08x MMFAR=0x%08x\r\n", SCB->CFSR, SCB->MMFAR);
   while (1) { }
 }
 
 void BusFault_Handler(void)
 {
   TIM1->BDTR &= ~TIM_BDTR_MOE;
-  SEGGER_RTT_WriteString(0, "*** BusFault_Handler ***\r\n");
+  SEGGER_RTT_printf(0, "*** BusFault_Handler *** CFSR=0x%08x BFAR=0x%08x\r\n", SCB->CFSR, SCB->BFAR);
   while (1) { }
 }
 
 void UsageFault_Handler(void)
 {
   TIM1->BDTR &= ~TIM_BDTR_MOE;
-  SEGGER_RTT_WriteString(0, "*** UsageFault_Handler ***\r\n");
+  SEGGER_RTT_printf(0, "*** UsageFault_Handler *** CFSR=0x%08x\r\n", SCB->CFSR);
   while (1) { }
 }
 
