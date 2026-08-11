@@ -1,0 +1,19 @@
+# Keil MDK-uVision build artifacts
+MDK-ARM/Objects/
+MDK-ARM/Listings/
+MDK-ARM/*.uvguix.*
+MDK-ARM/*.uvoptx
+MDK-ARM/*.uvguix
+MDK-ARM/JLinkLog.txt
+MDK-ARM/*.dep
+MDK-ARM/*.axf
+MDK-ARM/*.bak
+MDK-ARM/EventRecorderStub.scvd
+MDK-ARM/RTE/
+
+# Misc
+*.o
+*.d
+*.map
+*.bin
+*.hex
