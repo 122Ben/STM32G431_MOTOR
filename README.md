@@ -42,7 +42,22 @@ Drivers/STM32G4xx_HAL_Driver   原厂 HAL 库（仅保留本工程用到的模�
 2. 双击 `MDK-ARM/BLDC_SixStep.uvprojx` 用 Keil5 打开。
 3. Build (F7)。工程用 AC6 (ARM Compiler 6) 编译器。
 
+   ST 官方 HAL 库源码本身不是按 AC6 clang 的严格警告级别写的，Build 时可能会看到一些来自 `Drivers/STM32G4xx_HAL_Driver` 的 `-Wpadded`（结构体对齐补洞）、`-Wcast-align`（指针对齐提升转换）、`-Wswitch-enum`（switch 未穷举枚举）警告——这些都是 ST 原厂代码里的，不是本工程新写的代码有问题，已经在 `Cads` 编译选项里加了 `-Wno-padded -Wno-cast-align -Wno-switch-enum` 屏蔽掉，正常情况下 Build 应该是 0 Warning（如果还看到别的类型警告，那再具体看）。
+
 > 本仓库是在没有 Keil/ARMCC 工具链的 Linux 沙箱环境里生成的，**没有条件实际跑一次 Keil 编译**做最终验证。已经逐个对照拉取到的原厂 HAL/CMSIS 头文件核实了用到的结构体字段名、宏名、寄存器位名，但仍建议第一次打开工程后完整 Build 一遍，如果报错欢迎反馈。
+
+## 3.5 使用 J-Link 调试/下载
+
+调试器（J-Link / ULINK / ST-Link 等）的连接参数——具体探头、SWD 速率、端口——属于"用哪台电脑、接哪个探头"这种机器相关的本地状态，Keil 把它存在自动生成的 `.uvoptx` / `.uvguix` 里，这两个文件本来就没有随仓库提交（见 `.gitignore`），所以没法也不需要预先写死在 `.uvprojx` 里。切到 J-Link 只需要在 Keil 里点一下，之后 Keil 会自动记住：
+
+1. `Project` -> `Options for Target 'BLDC_SixStep'`（或按 Alt+F7）。
+2. **Debug** 页签，右侧"Use:"下拉框选择 **J-LINK / J-TRACE Cortex**（默认可能是 Simulator 或 ULINK2/ME）。
+3. 点旁边的 **Settings**，在弹出的对话框里：
+   - `Port` 选 SW（SWD，本工程没有把 JTAG 专用引脚单独引出）；
+   - 如果 J-Link 能识别到目标就会自动列出 Cortex-M4，Max Clock 一般默认几MHz起步即可，不确定就先用低速（比如 4MHz）连上，跑通了再往上提。
+4. 切到 **Utilities** 页签，"Use Debug Driver" 前打勾（一般会跟 Debug 页联动自动选成 J-Link 的下载驱动），确认后 F8（Download）就是用 J-Link 烧录，Ctrl+F5 就是用 J-Link 进调试。
+
+工程本身（源码、编译配置）已经和调试器完全解耦，选哪个探头不影响编译产物。
 
 ## 4. 上电前必读 / 调试步骤
 
