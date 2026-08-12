@@ -1,4 +1,5 @@
 #include "rtt_log.h"
+#include "stm32g4xx_hal.h"
 #include <string.h>
 
 #define RTT_BUFFER_SIZE 1024U
