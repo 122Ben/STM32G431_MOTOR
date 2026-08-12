@@ -63,6 +63,13 @@ extern UART_HandleTypeDef huart2;
 /******************************************************************************/
 /*           Cortex-M4 Processor Interruption and Exception Handlers          */
 /******************************************************************************/
+void EXTI9_5_IRQHandler(void)
+{
+  HAL_GPIO_EXTI_IRQHandler(HALL_C_Pin);
+  HAL_GPIO_EXTI_IRQHandler(HALL_B_Pin);
+  HAL_GPIO_EXTI_IRQHandler(HALL_A_Pin);
+}
+
 /**
   * @brief This function handles Non maskable interrupt.
   */

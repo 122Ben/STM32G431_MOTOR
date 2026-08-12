@@ -54,6 +54,11 @@ void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(STATUS_GPIO_Port, STATUS_Pin, GPIO_PIN_RESET);
 
+  /* Keep all low-side gate commands inactive during startup. */
+  HAL_GPIO_WritePin(UL_GPIO_Port, UL_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(VL_GPIO_Port, VL_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(WL_GPIO_Port, WL_Pin, GPIO_PIN_RESET);
+
   /*Configure GPIO pin : VBUS_ADC_Pin */
   GPIO_InitStruct.Pin = VBUS_ADC_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
@@ -67,6 +72,19 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(STATUS_GPIO_Port, &GPIO_InitStruct);
 
+  /*Configure GPIO pins : UL_Pin VL_Pin WL_Pin */
+  GPIO_InitStruct.Pin = UL_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(UL_GPIO_Port, &GPIO_InitStruct);
+
+  GPIO_InitStruct.Pin = VL_Pin;
+  HAL_GPIO_Init(VL_GPIO_Port, &GPIO_InitStruct);
+
+  GPIO_InitStruct.Pin = WL_Pin;
+  HAL_GPIO_Init(WL_GPIO_Port, &GPIO_InitStruct);
+
   /*Configure GPIO pin : BUTTON_Pin */
   GPIO_InitStruct.Pin = BUTTON_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
@@ -75,13 +93,16 @@ void MX_GPIO_Init(void)
 
   /*Configure GPIO pins : HALL_C_Pin HALL_B_Pin HALL_A_Pin */
   GPIO_InitStruct.Pin = HALL_C_Pin|HALL_B_Pin|HALL_A_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 5, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 
 }
 
