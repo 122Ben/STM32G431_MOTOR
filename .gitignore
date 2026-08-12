@@ -1,0 +1,35 @@
+# Keil build output
+Listings/
+Objects/
+DebugConfig/
+*.o
+*.axf
+*.hex
+*.bin
+*.lst
+*.map
+*.crf
+*.d
+*.dep
+*.htm
+*.lnp
+*.sct
+*.scvd
+*.uvgui.*
+*.uvguix.*
+*.bak
+
+# IDE / 本地配置
+.claude/
+.vscode/
+
+# Misc
+Thumbs.db
+*.swp
+
+# JLink debug logs
+JLinkLog.txt
+*.log
+# Python bytecode cache
+__pycache__/
+*.pyc
