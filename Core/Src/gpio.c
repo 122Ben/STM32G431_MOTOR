@@ -75,7 +75,7 @@ void MX_GPIO_Init(void)
 
   /*Configure GPIO pins : HALL_C_Pin HALL_B_Pin HALL_A_Pin */
   GPIO_InitStruct.Pin = HALL_C_Pin|HALL_B_Pin|HALL_A_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 

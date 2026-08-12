@@ -29,7 +29,6 @@
 #include "stdlib.h"
 /* USER CODE END Includes */
 
-
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 
@@ -53,7 +52,6 @@ uint8_t Uart1_RxBuff[256];
 uint8_t Uart1_Rx_Cnt=0;
 uint8_t cAlmStr[]="more than 256\r\n";
 /* USER CODE END PV */
-
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
@@ -99,8 +97,8 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   HAL_UART_Receive_IT(&huart2,(uint8_t *)&aRxBuffer,1);
+	HAL_GPIO_WritePin(STATUS_GPIO_Port, STATUS_Pin, GPIO_PIN_SET);
   /* USER CODE END 2 */
-
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
@@ -158,36 +156,39 @@ void SystemClock_Config(void)
   }
 }
 
-
 /* USER CODE BEGIN 4 */
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
-{
-  /* Prevent unused argument(s) compilation warning */
-  UNUSED(huart);
-  /* NOTE: This function Should not be modified, when the callback is needed,
-           the HAL_UART_TxCpltCallback could be implemented in the user file
+/**
+  * @brief  ????????
+  * @param  GPIO_Pin: ????????
+  * @retval None
   */
-
-  if(Uart1_Rx_Cnt >= 255) // ????
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+  /* ?????????????? */
+  if (GPIO_Pin == BUTTON_Pin)
   {
-  	Uart1_Rx_Cnt = 0;
-  	memset(Uart1_RxBuff,0x00,sizeof(Uart1_RxBuff));
-  	HAL_UART_Transmit(&huart2, (uint8_t *)&cAlmStr, sizeof(cAlmStr),0xFFFF);
-  }
-  else
-  {
-  	Uart1_RxBuff[Uart1_Rx_Cnt++] = aRxBuffer; // ??????
-      // ?????
-    if((Uart1_RxBuff[Uart1_Rx_Cnt-1] == 0x0A)&&(Uart1_RxBuff[Uart1_Rx_Cnt-2] == 0x0D))
+    /* ????????? */
+    static uint32_t last_press_time = 0;
+    uint32_t current_time = HAL_GetTick();
+    
+    /* ????:50ms */
+    if ((current_time - last_press_time) > 50)
     {
-  	  // ??????????
-  	  HAL_UART_Transmit(&huart2, (uint8_t *)&Uart1_RxBuff, Uart1_Rx_Cnt,0xFFFF);
-  	  Uart1_Rx_Cnt = 0;
-  	  memset(Uart1_RxBuff,0x00,sizeof(Uart1_RxBuff)); // ????
+      /* LED???? */
+      HAL_GPIO_TogglePin(STATUS_GPIO_Port, STATUS_Pin);
+      
+      /* ??:?????? */
+      // if (HAL_GPIO_ReadPin(LD2_GPIO_Port, LD2_Pin) == GPIO_PIN_SET)
+      //     printf("LED??: ?\n");
+      // else
+      //     printf("LED??: ?\n");
+      
+      last_press_time = current_time;
     }
   }
-
 }
+
+/* USER CODE END 4 */
 
 /**
   * @brief  This function is executed in case of error occurrence.
