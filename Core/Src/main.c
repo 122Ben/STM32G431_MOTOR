@@ -30,6 +30,7 @@
 #include "motor_pwm.h"
 #include "hall.h"
 #include "rtt_log.h"
+#include "motor_control.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -102,6 +103,7 @@ int main(void)
   MotorPwm_Init();
   RTT_Log_Init();
   Hall_Init();
+  MotorControl_Init();
   HAL_UART_Receive_IT(&huart2,(uint8_t *)&aRxBuffer,1);
 	HAL_GPIO_WritePin(STATUS_GPIO_Port, STATUS_Pin, GPIO_PIN_SET);
   /* USER CODE END 2 */
@@ -110,6 +112,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    MotorControl_Process();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -181,9 +184,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     /* ????:50ms */
     if ((current_time - last_press_time) > 50)
     {
-      /* Hall acquisition stage: the button never enables the power bridge. */
-      MotorPwm_AllOff();
-      HAL_GPIO_TogglePin(STATUS_GPIO_Port, STATUS_Pin);
+      MotorControl_Toggle();
       
       /* ??:?????? */
       // if (HAL_GPIO_ReadPin(LD2_GPIO_Port, LD2_Pin) == GPIO_PIN_SET)

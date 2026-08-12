@@ -1,5 +1,6 @@
 #include "hall.h"
 #include "motor_pwm.h"
+#include "motor_control.h"
 #include "rtt_log.h"
 
 static uint8_t hall_previous;
@@ -52,5 +53,6 @@ void Hall_OnEdge(uint16_t gpio_pin)
   }
 
   RTT_Log_Hall(hall, valid, transition_valid, hall_edge_count);
+  MotorControl_OnHallTransition(hall, valid, transition_valid);
   hall_previous = hall;
 }
