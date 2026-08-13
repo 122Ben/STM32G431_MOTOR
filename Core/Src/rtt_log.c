@@ -157,3 +157,25 @@ void RTT_Log_Status(uint8_t hall, uint32_t rpm, uint32_t edge_count)
   line[pos++] = '\r'; line[pos++] = '\n';
   RTT_Write(line, pos);
 }
+
+void RTT_Log_Diagnostic(uint8_t step, uint8_t hall_start, uint8_t hall_end,
+                        uint32_t edge_delta)
+{
+  char line[48];
+  uint32_t pos = 0U;
+
+  memcpy(&line[pos], "DIAG S=", 7U); pos += 7U;
+  line[pos++] = (char)('0' + step);
+  memcpy(&line[pos], " H=", 3U); pos += 3U;
+  line[pos++] = (char)('0' + ((hall_start >> 2) & 1U));
+  line[pos++] = (char)('0' + ((hall_start >> 1) & 1U));
+  line[pos++] = (char)('0' + (hall_start & 1U));
+  memcpy(&line[pos], "->", 2U); pos += 2U;
+  line[pos++] = (char)('0' + ((hall_end >> 2) & 1U));
+  line[pos++] = (char)('0' + ((hall_end >> 1) & 1U));
+  line[pos++] = (char)('0' + (hall_end & 1U));
+  memcpy(&line[pos], " dN=", 4U); pos += 4U;
+  pos = RTT_AppendUnsigned(line, pos, edge_delta);
+  line[pos++] = '\r'; line[pos++] = '\n';
+  RTT_Write(line, pos);
+}

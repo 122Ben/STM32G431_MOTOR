@@ -4,11 +4,14 @@
 #include <stdint.h>
 
 #define MOTOR_HALL_TIMEOUT_MS 500U
+#define MOTOR_DIAGNOSTIC_MODE  1U
+#define MOTOR_DIAG_PULSE_MS    50U
 
 typedef enum
 {
   MOTOR_STATE_STOP = 0,
   MOTOR_STATE_HALL_RUN,
+  MOTOR_STATE_DIAG_PULSE,
   MOTOR_STATE_FAULT
 } MotorControlState_t;
 
