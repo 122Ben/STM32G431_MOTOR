@@ -105,7 +105,6 @@ int main(void)
   Hall_Init();
   MotorControl_Init();
   HAL_UART_Receive_IT(&huart2,(uint8_t *)&aRxBuffer,1);
-	HAL_GPIO_WritePin(STATUS_GPIO_Port, STATUS_Pin, GPIO_PIN_SET);
   /* USER CODE END 2 */
 
   /* Infinite loop */
