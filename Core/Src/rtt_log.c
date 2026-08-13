@@ -123,3 +123,37 @@ void RTT_Log_Hall(uint8_t hall, uint8_t valid, uint8_t transition_valid,
   line[pos++] = '\r'; line[pos++] = '\n';
   RTT_Write(line, pos);
 }
+
+static uint32_t RTT_AppendUnsigned(char *line, uint32_t pos, uint32_t value)
+{
+  char digits[10];
+  uint32_t count = 0U;
+
+  do
+  {
+    digits[count++] = (char)('0' + (value % 10U));
+    value /= 10U;
+  } while (value != 0U);
+  while (count != 0U)
+  {
+    line[pos++] = digits[--count];
+  }
+  return pos;
+}
+
+void RTT_Log_Status(uint8_t hall, uint32_t rpm, uint32_t edge_count)
+{
+  char line[48];
+  uint32_t pos = 0U;
+
+  memcpy(&line[pos], "RUN H=", 6U); pos += 6U;
+  line[pos++] = (char)('0' + ((hall >> 2) & 1U));
+  line[pos++] = (char)('0' + ((hall >> 1) & 1U));
+  line[pos++] = (char)('0' + (hall & 1U));
+  memcpy(&line[pos], " RPM=", 5U); pos += 5U;
+  pos = RTT_AppendUnsigned(line, pos, rpm);
+  memcpy(&line[pos], " N=", 3U); pos += 3U;
+  pos = RTT_AppendUnsigned(line, pos, edge_count);
+  line[pos++] = '\r'; line[pos++] = '\n';
+  RTT_Write(line, pos);
+}

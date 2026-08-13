@@ -24,6 +24,7 @@ static const MotorStep_t hall_to_step[8] =
 
 static volatile uint8_t motor_running;
 static volatile uint32_t last_hall_tick;
+static uint32_t last_status_tick;
 
 static uint8_t MotorControl_HallIsValid(uint8_t hall)
 {
@@ -34,6 +35,7 @@ void MotorControl_Init(void)
 {
   motor_running = 0U;
   last_hall_tick = HAL_GetTick();
+  last_status_tick = last_hall_tick;
   MotorPwm_SetDutyPermille(MOTOR_TEST_DUTY_PERMILLE);
   MotorPwm_AllOff();
   RTT_Log_String("Motor stopped; button toggles run/stop\r\n");
@@ -51,6 +53,8 @@ void MotorControl_Start(void)
   }
 
   last_hall_tick = HAL_GetTick();
+  last_status_tick = last_hall_tick;
+  Hall_ResetSpeed();
   motor_running = 1U;
   MotorPwm_ApplyStep(hall_to_step[hall]);
   HAL_GPIO_WritePin(STATUS_GPIO_Port, STATUS_Pin, GPIO_PIN_SET);
@@ -99,13 +103,20 @@ void MotorControl_OnHallTransition(uint8_t hall, uint8_t valid,
 
 void MotorControl_Process(void)
 {
+  uint32_t now = HAL_GetTick();
+
   if ((motor_running != 0U) &&
-      ((HAL_GetTick() - last_hall_tick) > MOTOR_HALL_TIMEOUT_MS))
+      ((now - last_hall_tick) > MOTOR_HALL_TIMEOUT_MS))
   {
     motor_running = 0U;
     MotorPwm_AllOff();
     HAL_GPIO_WritePin(STATUS_GPIO_Port, STATUS_Pin, GPIO_PIN_RESET);
     RTT_Log_String("FAULT Hall timeout\r\n");
+  }
+  else if ((motor_running != 0U) && ((now - last_status_tick) >= 200U))
+  {
+    last_status_tick = now;
+    RTT_Log_Status(Hall_Read(), Hall_GetRpm(), Hall_GetEdgeCount());
   }
 }
 
