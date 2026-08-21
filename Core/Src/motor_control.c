@@ -27,7 +27,9 @@ static volatile uint32_t last_hall_tick;
 static uint32_t last_status_tick;
 static uint32_t last_control_tick;
 static uint32_t diag_start_tick;
-static uint32_t diag_start_edges;
+static uint32_t diag_start_forward;
+static uint32_t diag_start_reverse;
+static uint32_t diag_start_jump;
 static uint8_t diag_start_hall;
 static uint8_t diag_step;
 
@@ -56,7 +58,7 @@ void MotorControl_Init(void)
   MotorPwm_SetDutyPermille(MOTOR_TEST_DUTY_PERMILLE);
   MotorPwm_AllOff();
 #if MOTOR_DIAGNOSTIC_MODE
-  RTT_Log_String("DIAG mode: button pulses one step at 5% for 50ms\r\n");
+  RTT_Log_String("DIAG mode: one 5% sequence, 120ms per step\r\n");
 #else
   RTT_Log_String("Motor stopped; button toggles run/stop\r\n");
 #endif
@@ -93,16 +95,19 @@ void MotorControl_Stop(void)
 void MotorControl_Toggle(void)
 {
 #if MOTOR_DIAGNOSTIC_MODE
-  if (motor_state == MOTOR_STATE_DIAG_PULSE)
+  if (motor_state == MOTOR_STATE_DIAG_SEQUENCE)
   {
     MotorControl_Stop();
     return;
   }
 
   diag_start_hall = Hall_Read();
-  diag_start_edges = Hall_GetEdgeCount();
+  diag_start_forward = Hall_GetForwardCount();
+  diag_start_reverse = Hall_GetReverseCount();
+  diag_start_jump = Hall_GetJumpCount();
   diag_start_tick = HAL_GetTick();
-  motor_state = MOTOR_STATE_DIAG_PULSE;
+  diag_step = 0U;
+  motor_state = MOTOR_STATE_DIAG_SEQUENCE;
   MotorPwm_SetDutyPermille(MOTOR_TEST_DUTY_PERMILLE);
   MotorPwm_ApplyStep(diagnostic_steps[diag_step]);
   HAL_GPIO_WritePin(STATUS_GPIO_Port, STATUS_Pin, GPIO_PIN_SET);
@@ -149,17 +154,32 @@ void MotorControl_Process(void)
   }
   last_control_tick = now;
 
-  if ((motor_state == MOTOR_STATE_DIAG_PULSE) &&
-      ((now - diag_start_tick) >= MOTOR_DIAG_PULSE_MS))
+  if ((motor_state == MOTOR_STATE_DIAG_SEQUENCE) &&
+      ((now - diag_start_tick) >= MOTOR_DIAG_STEP_MS))
   {
     uint8_t completed_step = diag_step;
 
-    MotorPwm_AllOff();
-    HAL_GPIO_WritePin(STATUS_GPIO_Port, STATUS_Pin, GPIO_PIN_RESET);
-    motor_state = MOTOR_STATE_STOP;
     RTT_Log_Diagnostic((uint8_t)(completed_step + 1U), diag_start_hall,
-                       Hall_Read(), Hall_GetEdgeCount() - diag_start_edges);
-    diag_step = (uint8_t)((diag_step + 1U) % 6U);
+                       Hall_Read(),
+                       Hall_GetForwardCount() - diag_start_forward,
+                       Hall_GetReverseCount() - diag_start_reverse,
+                       Hall_GetJumpCount() - diag_start_jump);
+    diag_step++;
+    if (diag_step >= 6U)
+    {
+      MotorPwm_AllOff();
+      HAL_GPIO_WritePin(STATUS_GPIO_Port, STATUS_Pin, GPIO_PIN_RESET);
+      motor_state = MOTOR_STATE_STOP;
+      RTT_Log_String("DIAG sequence done; outputs off\r\n");
+      return;
+    }
+
+    diag_start_hall = Hall_Read();
+    diag_start_forward = Hall_GetForwardCount();
+    diag_start_reverse = Hall_GetReverseCount();
+    diag_start_jump = Hall_GetJumpCount();
+    diag_start_tick = now;
+    MotorPwm_ApplyStep(diagnostic_steps[diag_step]);
     return;
   }
 

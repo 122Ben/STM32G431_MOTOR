@@ -9,6 +9,6 @@ void RTT_Log_Hall(uint8_t hall, uint8_t valid, uint8_t transition_valid,
                   uint32_t edge_count);
 void RTT_Log_Status(uint8_t hall, uint32_t rpm, uint32_t edge_count);
 void RTT_Log_Diagnostic(uint8_t step, uint8_t hall_start, uint8_t hall_end,
-                        uint32_t edge_delta);
+                        uint32_t forward, uint32_t reverse, uint32_t jump);
 
 #endif

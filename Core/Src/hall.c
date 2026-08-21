@@ -6,11 +6,20 @@
 static uint8_t hall_previous;
 static volatile uint32_t hall_edge_count;
 static volatile uint32_t hall_rpm;
+static volatile uint32_t hall_forward_count;
+static volatile uint32_t hall_reverse_count;
+static volatile uint32_t hall_jump_count;
 static uint32_t hall_last_cycle;
 static uint32_t hall_period_cycles;
 
 #define HALL_EDGES_PER_REV 24U
 #define HALL_TIMER_HZ      168000000U
+
+static uint8_t Hall_ForwardNext(uint8_t hall)
+{
+  static const uint8_t next[8] = {0U, 3U, 6U, 2U, 5U, 1U, 4U, 0U};
+  return next[hall & 7U];
+}
 
 uint8_t Hall_Read(void)
 {
@@ -23,6 +32,9 @@ uint8_t Hall_Read(void)
 void Hall_Init(void)
 {
   hall_edge_count = 0U;
+  hall_forward_count = 0U;
+  hall_reverse_count = 0U;
+  hall_jump_count = 0U;
   CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
   DWT->CYCCNT = 0U;
   DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
@@ -68,11 +80,25 @@ void Hall_OnEdge(uint16_t gpio_pin)
 
   if ((valid == 0U) || (transition_valid == 0U))
   {
+    hall_jump_count++;
     MotorPwm_AllOff();
     RTT_Log_Hall(hall, valid, transition_valid, hall_edge_count);
   }
   else
   {
+    if (hall == Hall_ForwardNext(hall_previous))
+    {
+      hall_forward_count++;
+    }
+    else if (hall_previous == Hall_ForwardNext(hall))
+    {
+      hall_reverse_count++;
+    }
+    else
+    {
+      hall_jump_count++;
+    }
+
     now = DWT->CYCCNT;
     if (hall_last_cycle != 0U)
     {
@@ -97,4 +123,19 @@ uint32_t Hall_GetEdgeCount(void)
 uint32_t Hall_GetRpm(void)
 {
   return hall_rpm;
+}
+
+uint32_t Hall_GetForwardCount(void)
+{
+  return hall_forward_count;
+}
+
+uint32_t Hall_GetReverseCount(void)
+{
+  return hall_reverse_count;
+}
+
+uint32_t Hall_GetJumpCount(void)
+{
+  return hall_jump_count;
 }

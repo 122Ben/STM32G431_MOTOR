@@ -159,9 +159,9 @@ void RTT_Log_Status(uint8_t hall, uint32_t rpm, uint32_t edge_count)
 }
 
 void RTT_Log_Diagnostic(uint8_t step, uint8_t hall_start, uint8_t hall_end,
-                        uint32_t edge_delta)
+                        uint32_t forward, uint32_t reverse, uint32_t jump)
 {
-  char line[48];
+  char line[64];
   uint32_t pos = 0U;
 
   memcpy(&line[pos], "DIAG S=", 7U); pos += 7U;
@@ -174,8 +174,22 @@ void RTT_Log_Diagnostic(uint8_t step, uint8_t hall_start, uint8_t hall_end,
   line[pos++] = (char)('0' + ((hall_end >> 2) & 1U));
   line[pos++] = (char)('0' + ((hall_end >> 1) & 1U));
   line[pos++] = (char)('0' + (hall_end & 1U));
-  memcpy(&line[pos], " dN=", 4U); pos += 4U;
-  pos = RTT_AppendUnsigned(line, pos, edge_delta);
+  memcpy(&line[pos], " F=", 3U); pos += 3U;
+  pos = RTT_AppendUnsigned(line, pos, forward);
+  memcpy(&line[pos], " R=", 3U); pos += 3U;
+  pos = RTT_AppendUnsigned(line, pos, reverse);
+  memcpy(&line[pos], " J=", 3U); pos += 3U;
+  pos = RTT_AppendUnsigned(line, pos, jump);
+  memcpy(&line[pos], " NET=", 5U); pos += 5U;
+  if (reverse > forward)
+  {
+    line[pos++] = '-';
+    pos = RTT_AppendUnsigned(line, pos, reverse - forward);
+  }
+  else
+  {
+    pos = RTT_AppendUnsigned(line, pos, forward - reverse);
+  }
   line[pos++] = '\r'; line[pos++] = '\n';
   RTT_Write(line, pos);
 }
